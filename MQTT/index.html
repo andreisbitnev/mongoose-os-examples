@@ -24,42 +24,42 @@
 <script type="text/javascript">
     $(function(){
         window.clientId = "example_device";
-        // Create a client instance
-        client = new Paho.MQTT.Client("mqtt.dioty.co", Number(8080), clientId);
+        // setup the connection parameters, 8000 - broker port to communicate over websocket,  each server has its own port configured, usually 8000 or 8080
+        client = new Paho.MQTT.Client("broker.hivemq.com", Number(8000), clientId);
 
-        // set callback handlers
+        // callback functions
         client.onConnectionLost = onConnectionLost;
         client.onMessageArrived = onMessageArrived;
 
-        // connect the client
-        client.connect({onSuccess:onConnect, userName: 'andreisbitnev@gmail.com', password: '59b3f1cc'});
+        // callback function when connection is established, username and password for private brokers
+        client.connect({onSuccess:onConnect, userName: "", password: ""});
     });
 
-    // called when the client connects
+    //callback function when connection is established
     function onConnect() {
-        // Once a connection has been made, make a subscription and send a message.
-        console.log("onConnect");
-        client.subscribe('/andreisbitnev@gmail.com/'+clientId+'/getState');
+        console.log("Connected");
+        //Subscribe to example_device/getState topic
+        client.subscribe(clientId+'/getState');
         state('getState');
     }
 
-    // called when the client loses its connection
     function onConnectionLost(responseObject) {
         if (responseObject.errorCode !== 0) {
-            console.log("onConnectionLost:"+responseObject.errorMessage);
+            console.log("ConnectionLost:"+responseObject.errorMessage);
         }
     }
-    // called when a message arrives
+    // function is called when the message is received
     function onMessageArrived(message) {
         handleGetState(message.payloadString)
     }
+    // function receives an operation name as a parameter: getState/turnOn/turnOff, and sends a message to topic example_device/state
     function state(operation){
         message = new Paho.MQTT.Message(JSON.stringify(
             {
                 operation: operation
             }
         ));
-        message.destinationName = '/andreisbitnev@gmail.com/'+clientId+"/state";
+        message.destinationName = clientId+"/state";
         client.send(message);
     }
     $('#turnOn').click(function(){
